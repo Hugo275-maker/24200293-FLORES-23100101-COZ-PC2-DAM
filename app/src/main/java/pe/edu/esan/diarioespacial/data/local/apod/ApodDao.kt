@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -30,6 +31,16 @@ interface ApodDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateImagenes(imagenes: List<ApodEntity>)
+
+    /**
+     * Guarda las imágenes nuevas conservando las favoritas, en una sola transacción.
+     * Así un favorito marcado mientras se sincroniza no se pierde.
+     */
+    @Transaction
+    suspend fun guardarConservandoFavoritas(imagenes: List<ApodEntity>) {
+        val favoritas = getFechasFavoritas().toSet()
+        insertOrUpdateImagenes(imagenes.map { it.copy(isFavorite = it.date in favoritas) })
+    }
 
     @Query("UPDATE apod SET isFavorite = :isFavorite WHERE date = :date")
     suspend fun updateFavoriteStatus(date: String, isFavorite: Boolean)
