@@ -25,11 +25,23 @@ data class ApodDto(
             date = fechaValidada,
             title = title?.trim()?.ifBlank { "Sin título" } ?: "Sin título",
             explanation = explanation?.trim()?.ifBlank { "Sin descripción disponible." } ?: "Sin descripción disponible.",
-            url = url?.trim()?.takeIf { it.isNotBlank() },
-            hdurl = hdurl?.trim()?.takeIf { it.isNotBlank() },
+            url = url.urlDeImagenValida(),
+            hdurl = hdurl.urlDeImagenValida(),
             mediaType = mediaType?.trim()?.ifBlank { "image" } ?: "image",
             copyright = copyright?.trim()?.takeIf { it.isNotBlank() },
             isFavorite = isFavorite
         )
     }
 }
+
+/**
+ * Desde que apod.nasa.gov se mudó a science.nasa.gov/apod/, la API devuelve
+ * para todos los días el logo del sitio en lugar de la foto del día.
+ * Ese logo no es la imagen astronómica, así que se trata como "sin imagen".
+ */
+internal fun esLogoGenericoNasa(url: String): Boolean =
+    url.contains("nasa-logo", ignoreCase = true)
+
+/** URL limpia, o null si viene vacía o es el logo genérico de la NASA. */
+internal fun String?.urlDeImagenValida(): String? =
+    this?.trim()?.takeIf { it.isNotBlank() && !esLogoGenericoNasa(it) }
