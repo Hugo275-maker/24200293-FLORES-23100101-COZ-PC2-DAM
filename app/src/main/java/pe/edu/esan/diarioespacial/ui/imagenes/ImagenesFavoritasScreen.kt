@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import pe.edu.esan.diarioespacial.ui.common.IndicadorCarga
 import pe.edu.esan.diarioespacial.ui.common.MensajeVacio
 import pe.edu.esan.diarioespacial.ui.common.PantallaConBarra
 
@@ -36,7 +37,10 @@ fun ImagenesFavoritasScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (favoritas.isEmpty()) {
+            val lista = favoritas
+            if (lista == null) {
+                IndicadorCarga()
+            } else if (lista.isEmpty()) {
                 MensajeVacio(
                     mensaje = "Todavía no tienes imágenes favoritas.",
                     detalle = "Guarda tus imágenes APOD favoritas desde la pantalla principal o desde el detalle."
@@ -47,7 +51,7 @@ fun ImagenesFavoritasScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(favoritas, key = { it.date }) { imagen ->
+                    items(lista, key = { it.date }) { imagen ->
                         ImagenApodItem(
                             entity = imagen,
                             onClick = { onNavigateToDetail(imagen.date) },

@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Star
@@ -24,29 +23,24 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import pe.edu.esan.diarioespacial.data.local.apod.ApodEntity
 import pe.edu.esan.diarioespacial.ui.common.IndicadorCarga
 import pe.edu.esan.diarioespacial.ui.common.MensajeVacio
 import pe.edu.esan.diarioespacial.ui.common.PantallaConBarra
+import pe.edu.esan.diarioespacial.util.FechaUtils
 
 /**
  * Pantalla principal de la opción Imágenes NASA APOD.
@@ -62,21 +56,16 @@ fun ImagenesListaScreen(
     val cargando by viewModel.cargando.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(error) {
-        error?.let {
-            snackbarHostState.showSnackbar(it)
-        }
-    }
-
     PantallaConBarra(
-        titulo = "Imágenes NASA",
+        titulo = "Imágenes del día",
         acciones = {
+            IconButton(onClick = { viewModel.sincronizar() }, enabled = !cargando) {
+                Icon(imageVector = Icons.Filled.Refresh, contentDescription = "Actualizar")
+            }
             TextButton(onClick = onNavigateToFavoritos) {
                 Icon(
                     imageVector = Icons.Outlined.Star,
-                    contentDescription = "Mis Favoritas"
+                    contentDescription = "Mis imágenes favoritas"
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Mis favoritas")
@@ -89,6 +78,10 @@ fun ImagenesListaScreen(
                 .padding(padding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
+                // Hay imágenes guardadas y se está actualizando: barra de progreso arriba.
+                if (cargando && imagenes.isNotEmpty()) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
                 if (error != null) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
@@ -123,7 +116,7 @@ fun ImagenesListaScreen(
                 } else if (imagenes.isEmpty()) {
                     MensajeVacio(
                         mensaje = "No hay imágenes para mostrar",
-                        detalle = "Comprueba tu conexión a Internet y presiona el botón de reintentar."
+                        detalle = "Revisa tu conexión y la API key, y vuelve a intentarlo."
                     )
                 } else {
                     LazyColumn(
@@ -143,11 +136,6 @@ fun ImagenesListaScreen(
                     }
                 }
             }
-
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
         }
     }
 }
@@ -166,43 +154,8 @@ fun ImagenApodItem(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column {
-            if (entity.mediaType == "video") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    ) {}
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Filled.PlayCircle,
-                            contentDescription = "Video",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.height(48.dp).width(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Contenido en video",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            } else {
-                AsyncImage(
-                    model = entity.url,
-                    contentDescription = entity.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-            }
+            // Si es video no se carga la imagen; si la API no la envió se avisa.
+            ImagenApodVista(imagen = entity, altura = 200.dp, usarAltaResolucion = false)
 
             Row(
                 modifier = Modifier
@@ -221,7 +174,7 @@ fun ImagenApodItem(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = entity.date,
+                        text = FechaUtils.legible(entity.date),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
