@@ -12,30 +12,24 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import pe.edu.esan.diarioespacial.ui.common.IndicadorCarga
-import pe.edu.esan.diarioespacial.ui.common.MensajeVacio
 import pe.edu.esan.diarioespacial.ui.common.PantallaConBarra
+import pe.edu.esan.diarioespacial.util.FechaUtils
 
 /**
  * Pantalla de Detalle de la imagen APOD seleccionada.
@@ -47,11 +41,12 @@ fun ImagenDetalleScreen(
     viewModel: ImagenesViewModel,
     onVolver: () -> Unit
 ) {
-    val imagenStateFlow = viewModel.getImagenPorFecha(date)
+    // remember: el flujo se crea una sola vez, no en cada recomposición.
+    val imagenStateFlow = remember(date) { viewModel.getImagenPorFecha(date) }
     val entity by imagenStateFlow.collectAsStateWithLifecycle()
 
     PantallaConBarra(
-        titulo = "Detalle de Imagen",
+        titulo = "Detalle de la imagen",
         onBack = onVolver,
         acciones = {
             entity?.let { imagen ->
@@ -81,48 +76,8 @@ fun ImagenDetalleScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                if (currentEntity.mediaType == "video") {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(240.dp)
-                            .padding(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    imageVector = Icons.Filled.PlayCircle,
-                                    contentDescription = "Video",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    modifier = Modifier
-                                        .height(64.dp)
-                                        .width(64.dp)
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Contenido en video",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    val imageUrl = currentEntity.hdurl?.takeIf { it.isNotBlank() } ?: currentEntity.url
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = currentEntity.title,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
-                    )
-                }
+                // Imagen grande: hdurl si existe y, si no, url (o aviso de video / sin imagen).
+                ImagenApodVista(imagen = currentEntity, altura = 300.dp, usarAltaResolucion = true)
 
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -134,7 +89,7 @@ fun ImagenDetalleScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Fecha: ${currentEntity.date}",
+                        text = "Fecha: ${FechaUtils.legible(currentEntity.date)}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
