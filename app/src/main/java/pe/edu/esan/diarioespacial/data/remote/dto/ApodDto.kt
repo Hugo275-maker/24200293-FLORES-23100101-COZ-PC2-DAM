@@ -4,7 +4,8 @@ import com.google.gson.annotations.SerializedName
 import pe.edu.esan.diarioespacial.data.local.apod.ApodEntity
 
 /**
- * Modelo de transferencia de datos (DTO) para la respuesta JSON de la API NASA APOD.
+ * Modelo DTO para deserializar respuestas de la API NASA APOD
+ * (compatible tanto con api.nasa.gov como con science.nasa.gov/wp-json/wp/v2/apod-basic).
  */
 data class ApodDto(
     @SerializedName("date") val date: String?,
@@ -13,23 +14,59 @@ data class ApodDto(
     @SerializedName("url") val url: String?,
     @SerializedName("hdurl") val hdurl: String?,
     @SerializedName("media_type") val mediaType: String?,
-    @SerializedName("copyright") val copyright: String?
+    @SerializedName("copyright") val copyright: String?,
+    @SerializedName("credit") val credit: String? = null
 ) {
     /**
-     * Convierte el DTO a una Entidad de Room ApodEntity.
-     * Retorna null si la fecha es inválida o nula.
+     * Convierte el DTO a ApodEntity limpiando etiquetas HTML, resolviendo URLs de imágenes directas
+     * y preservando el estado local de favoritos.
      */
     fun toEntity(isFavorite: Boolean = false): ApodEntity? {
         val fechaValidada = date?.trim()?.takeIf { it.isNotBlank() } ?: return null
+        val tituloLimpio = limpiarHtml(title).ifBlank { "Sin título" }
+
+        val explicacionLimpia = limpiarHtml(explanation)
+            .removePrefix("Explanation:")
+            .removePrefix("Explanation :")
+            .trim()
+            .ifBlank { "Sin descripción disponible." }
+
+        val autorLimpio = limpiarHtml(copyright ?: credit).takeIf { it.isNotBlank() }
+
+        // Extraer URL directa de imagen omitiendo páginas web HTML o logotipos genéricos
+        val directHdUrl = hdurl?.trim()?.takeIf {
+            it.isNotBlank() && (it.startsWith("http://") || it.startsWith("https://")) && !it.contains("/image-article/")
+        }
+
+        val directUrl = url?.trim()?.takeIf {
+            it.isNotBlank() && (it.startsWith("http://") || it.startsWith("https://")) && !it.contains("/image-article/") && !it.contains("/nasa-logo")
+        }
+
+        val imagenFinalUrl = directHdUrl ?: directUrl
+
         return ApodEntity(
             date = fechaValidada,
-            title = title?.trim()?.ifBlank { "Sin título" } ?: "Sin título",
-            explanation = explanation?.trim()?.ifBlank { "Sin descripción disponible." } ?: "Sin descripción disponible.",
-            url = url?.trim()?.takeIf { it.isNotBlank() },
-            hdurl = hdurl?.trim()?.takeIf { it.isNotBlank() },
+            title = tituloLimpio,
+            explanation = explicacionLimpia,
+            url = imagenFinalUrl,
+            hdurl = directHdUrl ?: imagenFinalUrl,
             mediaType = mediaType?.trim()?.ifBlank { "image" } ?: "image",
-            copyright = copyright?.trim()?.takeIf { it.isNotBlank() },
+            copyright = autorLimpio,
             isFavorite = isFavorite
         )
+    }
+
+    private fun limpiarHtml(texto: String?): String {
+        if (texto.isNullOrBlank()) return ""
+        return texto
+            .replace(Regex("<[^>]*>"), "")
+            .replace("&nbsp;", " ")
+            .replace("&amp;", "&")
+            .replace("&quot;", "\"")
+            .replace("&#39;", "'")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&#8211;", "–")
+            .trim()
     }
 }

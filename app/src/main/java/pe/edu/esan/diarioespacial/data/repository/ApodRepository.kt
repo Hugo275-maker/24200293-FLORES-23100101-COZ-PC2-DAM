@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import pe.edu.esan.diarioespacial.data.local.apod.ApodDao
 import pe.edu.esan.diarioespacial.data.local.apod.ApodEntity
 import pe.edu.esan.diarioespacial.data.remote.ApodApiService
+import pe.edu.esan.diarioespacial.data.remote.dto.ApodDto
 import pe.edu.esan.diarioespacial.util.FechaUtils
 
 /**
@@ -18,11 +19,15 @@ class ApodRepository(
     private val apodDao: ApodDao
 ) {
 
-    val imagenes: Flow<List<ApodEntity>> = apodDao.getTodasLasImagenes()
+    fun getImagenesUltimos7Dias(): Flow<List<ApodEntity>> {
+        val (startDate, _) = FechaUtils.ultimos7Dias()
+        return apodDao.getImagenesUltimos7Dias(startDate)
+    }
+
     val favoritas: Flow<List<ApodEntity>> = apodDao.getImagenesFavoritas()
 
     fun getImagenPorFecha(date: String): Flow<ApodEntity?> =
-        apodDao.getImagenPorFechaFlow(date)
+        apodDao.getImagenSingleFlow(date)
 
     suspend fun toggleFavorite(date: String, currentIsFavorite: Boolean) {
         apodDao.updateFavoriteStatus(date, !currentIsFavorite)
@@ -30,8 +35,23 @@ class ApodRepository(
 
     suspend fun syncUltimos7Dias(): Result<Unit> {
         return runCatching {
-            val (startDate, endDate) = FechaUtils.ultimos7Dias()
-            val dtos = apiService.getApodImages(startDate, endDate)
+            var dtos: List<ApodDto>
+
+            // 1. Intentar API legacy (planetary/apod)
+            try {
+                val (startDate, endDate) = FechaUtils.ultimos7Dias()
+                dtos = apiService.getApodImages(startDate, endDate)
+
+                // Si la respuesta legacy devuelve datos vacíos o sólo títulos genéricos "NASA Science",
+                // recurrir al endpoint oficial de WordPress de la NASA
+                if (dtos.isEmpty() || dtos.all { (it.title == "NASA Science") || (it.hdurl.isNullOrBlank() && it.url?.contains("/image-article/") == true) }) {
+                    dtos = apiService.getApodImagesWp(perPage = 10)
+                }
+            } catch (_: Exception) {
+                // 2. Si el endpoint legacy falla (ej. error 429 por límite de peticiones de DEMO_KEY),
+                // consultar el endpoint oficial de la NASA science.nasa.gov
+                dtos = apiService.getApodImagesWp(perPage = 10)
+            }
 
             val favoritasSet = apodDao.getFechasFavoritas().toSet()
 

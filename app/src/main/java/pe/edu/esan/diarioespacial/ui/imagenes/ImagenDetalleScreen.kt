@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import pe.edu.esan.diarioespacial.ui.common.IndicadorCarga
-import pe.edu.esan.diarioespacial.ui.common.MensajeVacio
 import pe.edu.esan.diarioespacial.ui.common.PantallaConBarra
 
 /**
@@ -114,14 +113,31 @@ fun ImagenDetalleScreen(
                     }
                 } else {
                     val imageUrl = currentEntity.hdurl?.takeIf { it.isNotBlank() } ?: currentEntity.url
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = currentEntity.title,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
-                    )
+                    if (!imageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = currentEntity.title,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                        )
+                    } else {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "Imagen no disponible",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column(modifier = Modifier.padding(16.dp)) {

@@ -8,16 +8,22 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * DAO de la opción Imágenes (Alumno 1).
- * Consultas con Flow para la lista de imágenes, el detalle y los favoritos.
+ * Consultas con Flow para la lista de los últimos 7 días, el detalle y los favoritos.
  */
 @Dao
 interface ApodDao {
+
+    @Query("SELECT * FROM apod WHERE date >= :fechaInicio ORDER BY date DESC")
+    fun getImagenesUltimos7Dias(fechaInicio: String): Flow<List<ApodEntity>>
 
     @Query("SELECT * FROM apod ORDER BY date DESC")
     fun getTodasLasImagenes(): Flow<List<ApodEntity>>
 
     @Query("SELECT * FROM apod WHERE date = :date LIMIT 1")
-    fun getImagenPorFechaFlow(date: String): Flow<ApodEntity?>
+    fun getImagenPorFechaFlow(date: String): Flow<List<ApodEntity>>
+
+    @Query("SELECT * FROM apod WHERE date = :date LIMIT 1")
+    fun getImagenSingleFlow(date: String): Flow<ApodEntity?>
 
     @Query("SELECT * FROM apod WHERE date = :date LIMIT 1")
     suspend fun getImagenPorFecha(date: String): ApodEntity?
