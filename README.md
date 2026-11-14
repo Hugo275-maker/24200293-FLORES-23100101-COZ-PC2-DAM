@@ -97,6 +97,6 @@ Incluye:
 - `main` está protegida: no se hacen commits directos. Todo entra por Pull Request.
 - Cada PR lo revisa y aprueba el otro integrante, con al menos un comentario de revisión.
 - Commits pequeños con mensajes que explican el cambio.
-- `AppDatabase` está en la **versión 2** (el Alumno 2 cambió `AsteroidEntity`). Si el
-  Alumno 1 cambia `ApodEntity`, sube la versión a 3; con
+- `AppDatabase` está en la **versión 3** (cambiaron `AsteroidEntity` y `ApodEntity`). Si alguien
+  vuelve a cambiar una Entity, sube la versión a 4; con
   `fallbackToDestructiveMigration()` la base se recrea sola.
