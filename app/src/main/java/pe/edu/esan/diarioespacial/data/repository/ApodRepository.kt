@@ -1,10 +1,14 @@
 package pe.edu.esan.diarioespacial.data.repository
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import pe.edu.esan.diarioespacial.BuildConfig
 import pe.edu.esan.diarioespacial.data.local.apod.ApodDao
 import pe.edu.esan.diarioespacial.data.local.apod.ApodEntity
 import pe.edu.esan.diarioespacial.data.remote.ApodApiService
 import pe.edu.esan.diarioespacial.util.FechaUtils
+import retrofit2.HttpException
+import java.io.IOException
 
 /**
  * Repositorio para la opción Imágenes (Alumno 1).
@@ -28,26 +32,34 @@ class ApodRepository(
         apodDao.updateFavoriteStatus(date, !currentIsFavorite)
     }
 
+    /**
+     * Consulta APOD de los últimos 7 días y lo guarda en Room.
+     * No lanza excepciones: devuelve un Result con un mensaje en español si falla.
+     */
     suspend fun syncUltimos7Dias(): Result<Unit> {
-        return runCatching {
-            val (startDate, endDate) = FechaUtils.ultimos7Dias()
-            val dtos = apiService.getApodImages(startDate, endDate)
-
-            val favoritasSet = apodDao.getFechasFavoritas().toSet()
-
-            val entities = dtos.mapNotNull { dto ->
-                val date = dto.date
-                if (date.isNullOrBlank()) {
-                    null
-                } else {
-                    val isFav = favoritasSet.contains(date)
-                    dto.toEntity(isFavorite = isFav)
-                }
-            }
-
+        val (startDate, endDate) = FechaUtils.ultimos7Dias()
+        return try {
+            val entities = apiService.getApodImages(startDate, endDate)
+                .mapNotNull { it.toEntity() }
             if (entities.isNotEmpty()) {
-                apodDao.insertOrUpdateImagenes(entities)
+                apodDao.guardarConservandoFavoritas(entities)
             }
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: HttpException) {
+            val mensaje = when (e.code()) {
+                401, 403 -> if (BuildConfig.NASA_API_KEY.isBlank())
+                    "Falta la API key: agrega NASA_API_KEY=tu_clave en local.properties y vuelve a ejecutar."
+                else "La API rechazó la clave. Revisa NASA_API_KEY en local.properties."
+                429 -> "Se superó el límite de consultas de la API. Intenta más tarde."
+                else -> "Error del servidor de la NASA (${e.code()})."
+            }
+            Result.failure(Exception(mensaje, e))
+        } catch (e: IOException) {
+            Result.failure(Exception("Sin conexión. Se muestran las imágenes guardadas.", e))
+        } catch (e: Exception) {
+            Result.failure(Exception("No se pudieron leer los datos de la API.", e))
         }
     }
 }
