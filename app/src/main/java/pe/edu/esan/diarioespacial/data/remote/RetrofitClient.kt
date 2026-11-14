@@ -24,8 +24,13 @@ object RetrofitClient {
     private const val BASE_URL = "https://api.nasa.gov/"
     private const val TAG = "NasaApi"
 
+    private const val HOST_API = "api.nasa.gov"
+
+    // La api_key solo se manda a api.nasa.gov; otros hosts (p. ej. science.nasa.gov)
+    // no la necesitan y no deben recibirla.
     private val apiKeyInterceptor = Interceptor { chain ->
         val original = chain.request()
+        if (original.url.host != HOST_API) return@Interceptor chain.proceed(original)
         val url = original.url.newBuilder()
             .addQueryParameter("api_key", BuildConfig.NASA_API_KEY)
             .build()
