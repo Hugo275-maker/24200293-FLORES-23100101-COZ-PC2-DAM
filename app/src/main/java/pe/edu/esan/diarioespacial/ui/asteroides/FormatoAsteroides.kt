@@ -1,10 +1,9 @@
 package pe.edu.esan.diarioespacial.ui.asteroides
 
+import pe.edu.esan.diarioespacial.util.FechaUtils
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /** Formato de los datos de asteroides para mostrarlos en pantalla. */
@@ -14,7 +13,6 @@ object FormatoAsteroides {
 
     // Punto decimal y coma de miles (como en Perú): 65,260.55 km/h
     private val simbolos = DecimalFormatSymbols(Locale.US)
-    private val formatoFecha = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es", "PE"))
 
     /** Número redondeado a máximo dos decimales y con su unidad: "470.71 m". */
     fun numero(valor: Double?, unidad: String): String {
@@ -28,8 +26,5 @@ object FormatoAsteroides {
     fun km(valor: Double?) = numero(valor, "km")
 
     /** "2026-11-14" -> "14 de noviembre de 2026". Si no se puede leer, se muestra tal cual. */
-    fun fecha(iso: String?): String {
-        if (iso.isNullOrBlank()) return "Sin fecha"
-        return runCatching { LocalDate.parse(iso).format(formatoFecha) }.getOrDefault(iso)
-    }
+    fun fecha(iso: String?): String = FechaUtils.legible(iso)
 }

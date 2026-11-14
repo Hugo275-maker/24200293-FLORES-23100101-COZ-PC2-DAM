@@ -2,6 +2,7 @@ package pe.edu.esan.diarioespacial.util
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /** Utilidades de fechas compartidas por ambas opciones (formato AAAA-MM-DD). */
 object FechaUtils {
@@ -15,4 +16,13 @@ object FechaUtils {
      */
     fun ultimos7Dias(hoy: LocalDate = LocalDate.now()): Pair<String, String> =
         hoy.minusDays(6).format(FORMATO) to hoy.format(FORMATO)
+
+    private val FORMATO_LEGIBLE: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es", "PE"))
+
+    /** "2026-11-14" -> "14 de noviembre de 2026". Si no se puede leer, se devuelve tal cual. */
+    fun legible(iso: String?): String {
+        if (iso.isNullOrBlank()) return "Sin fecha"
+        return runCatching { LocalDate.parse(iso).format(FORMATO_LEGIBLE) }.getOrDefault(iso)
+    }
 }
