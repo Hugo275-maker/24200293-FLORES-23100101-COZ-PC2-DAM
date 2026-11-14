@@ -18,7 +18,7 @@ import pe.edu.esan.diarioespacial.data.local.asteroides.AsteroidEntity
  */
 @Database(
     entities = [ApodEntity::class, AsteroidEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

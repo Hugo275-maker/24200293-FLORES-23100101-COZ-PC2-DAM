@@ -28,7 +28,7 @@ App Android en **Kotlin + Jetpack Compose** que consume la API abierta de la NAS
    El código la lee con `BuildConfig.NASA_API_KEY`. Hay un ejemplo en `local.properties.example`.
 5. Volver a sincronizar Gradle (*Sync Now*) y ejecutar la app (▶) en un emulador o celular.
 
-Requisitos: Android Studio reciente (JDK 17 o superior incluido), SDK 35, dispositivo con Android 8.0 (API 26) o superior.
+Requisitos: Gradle 9.6.0 (wrapper), AGP 8.7.2, Java 17, Android Studio reciente (JDK 17 o superior incluido), SDK 35, dispositivo con Android 8.0 (API 26) o superior.
 
 ## Tecnologías
 
@@ -97,3 +97,6 @@ Incluye:
 - `main` está protegida: no se hacen commits directos. Todo entra por Pull Request.
 - Cada PR lo revisa y aprueba el otro integrante, con al menos un comentario de revisión.
 - Commits pequeños con mensajes que explican el cambio.
+- `AppDatabase` está en la **versión 2** (el Alumno 2 cambió `AsteroidEntity`). Si el
+  Alumno 1 cambia `ApodEntity`, sube la versión a 3; con
+  `fallbackToDestructiveMigration()` la base se recrea sola.
