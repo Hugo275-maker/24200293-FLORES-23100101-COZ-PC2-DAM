@@ -15,11 +15,13 @@ class AppContainer(context: Context) {
 
     // ---------------------------------------------------------------
     // Alumno 1 – Imágenes (APOD)
-    // Ejemplo:
-    // val apodRepository by lazy {
-    //     ApodRepository(RetrofitClient.create<ApodApiService>(), database.apodDao())
-    // }
     // ---------------------------------------------------------------
+    val apodRepository: pe.edu.esan.diarioespacial.data.repository.ApodRepository by lazy {
+        pe.edu.esan.diarioespacial.data.repository.ApodRepository(
+            pe.edu.esan.diarioespacial.data.remote.RetrofitClient.create<pe.edu.esan.diarioespacial.data.remote.ApodApiService>(),
+            database.apodDao()
+        )
+    }
 
 
 
