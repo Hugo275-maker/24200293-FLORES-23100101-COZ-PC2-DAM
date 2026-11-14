@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# Archivos locales (aquí va la API key de la NASA: NUNCA subir)
+local.properties
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Builds y llaves
+*.apk
+*.aab
+*.jks
+*.keystore
