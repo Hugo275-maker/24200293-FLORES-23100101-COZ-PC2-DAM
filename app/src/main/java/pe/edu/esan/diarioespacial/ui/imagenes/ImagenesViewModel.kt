@@ -14,7 +14,7 @@ import pe.edu.esan.diarioespacial.data.repository.ApodRepository
 
 /**
  * ViewModel de la opción Imágenes (Alumno 1).
- * Expone el estado a través de StateFlow y responde a las interacciones del usuario.
+ * Expone las imágenes de los últimos 7 días y los favoritos mediante StateFlow.
  *
  * @param sincronizarAlIniciar solo la lista consulta la API al abrirse; el detalle
  * y las favoritas leen lo que ya está en Room (no repiten la consulta).
@@ -24,7 +24,7 @@ class ImagenesViewModel(
     sincronizarAlIniciar: Boolean
 ) : ViewModel() {
 
-    val imagenes: StateFlow<List<ApodEntity>> = repository.imagenes
+    val imagenes: StateFlow<List<ApodEntity>> = repository.getImagenesUltimos7Dias()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

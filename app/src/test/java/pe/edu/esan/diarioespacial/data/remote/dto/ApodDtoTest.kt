@@ -21,8 +21,29 @@ class ApodDtoTest {
         val url = "https://apod.nasa.gov/apod/image/2611/foto.jpg"
         val e = ApodDto("2026-11-14", "Foto", "Texto", url, null, "image", " Autor ").toEntity()!!
         assertEquals(url, e.url)
-        assertNull(e.hdurl)
+        assertEquals(url, e.hdurl) // sin hdurl, el detalle usa la url normal
         assertEquals("Autor", e.copyright)
+    }
+
+    @Test
+    fun formatoDelEndpointNuevoUsaHdurlYLimpiaHtml() {
+        // Así responde science.nasa.gov/wp-json/wp/v2/apod-basic: url es una página HTML.
+        val pagina = "https://science.nasa.gov/image-article/apod-2026-november-14-apollo-12/"
+        val foto = "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/foto.jpg?w=2181"
+        val e = ApodDto(
+            date = "2026-11-14",
+            title = "Apollo 12 and Surveyor 3",
+            explanation = "<strong>Explanation:</strong> Put on your <a href=\"x\">red/blue glasses</a>.",
+            url = pagina,
+            hdurl = foto,
+            mediaType = "image",
+            copyright = null,
+            credit = "<a href=\"y\">Kevin Frank</a>"
+        ).toEntity()!!
+        assertEquals(foto, e.url)
+        assertEquals(foto, e.hdurl)
+        assertEquals("Put on your red/blue glasses.", e.explanation)
+        assertEquals("Kevin Frank", e.copyright)
     }
 
     @Test
