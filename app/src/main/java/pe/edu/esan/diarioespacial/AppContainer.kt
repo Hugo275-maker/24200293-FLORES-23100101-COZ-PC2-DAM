@@ -25,9 +25,13 @@ class AppContainer(context: Context) {
 
     // ---------------------------------------------------------------
     // Alumno 2 – Asteroides (NeoWs)
-    // Ejemplo:
-    // val asteroidRepository by lazy {
-    //     AsteroidRepository(RetrofitClient.create<NeoApiService>(), database.asteroidDao())
-    // }
+    // (nombres completos para no tocar los imports compartidos y evitar conflictos)
+    val asteroidRepository: pe.edu.esan.diarioespacial.data.asteroides.AsteroidRepository by lazy {
+        pe.edu.esan.diarioespacial.data.asteroides.AsteroidRepository(
+            pe.edu.esan.diarioespacial.data.remote.RetrofitClient
+                .create<pe.edu.esan.diarioespacial.data.remote.asteroides.NeoApiService>(),
+            database.asteroidDao()
+        )
+    }
     // ---------------------------------------------------------------
 }
