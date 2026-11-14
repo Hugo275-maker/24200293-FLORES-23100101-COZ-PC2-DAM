@@ -28,6 +28,8 @@ data class ApodDto(
         val explicacionLimpia = limpiarHtml(explanation)
             .removePrefix("Explanation:")
             .removePrefix("Explanation :")
+            .removePrefix("Explicación:")
+            .removePrefix("Explicación :")
             .trim()
             .ifBlank { "Sin descripción disponible." }
 

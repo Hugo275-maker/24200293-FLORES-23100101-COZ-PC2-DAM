@@ -13,17 +13,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ApodDao {
 
-    @Query("SELECT * FROM apod WHERE date >= :fechaInicio ORDER BY date DESC")
-    fun getImagenesUltimos7Dias(fechaInicio: String): Flow<List<ApodEntity>>
+    @Query("SELECT * FROM apod WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC")
+    fun getImagenesUltimos7Dias(startDate: String, endDate: String): Flow<List<ApodEntity>>
 
     @Query("SELECT * FROM apod ORDER BY date DESC")
     fun getTodasLasImagenes(): Flow<List<ApodEntity>>
 
     @Query("SELECT * FROM apod WHERE date = :date LIMIT 1")
-    fun getImagenPorFechaFlow(date: String): Flow<List<ApodEntity>>
-
-    @Query("SELECT * FROM apod WHERE date = :date LIMIT 1")
-    fun getImagenSingleFlow(date: String): Flow<ApodEntity?>
+    fun getImagenPorFechaFlow(date: String): Flow<ApodEntity?>
 
     @Query("SELECT * FROM apod WHERE date = :date LIMIT 1")
     suspend fun getImagenPorFecha(date: String): ApodEntity?

@@ -20,14 +20,14 @@ class ApodRepository(
 ) {
 
     fun getImagenesUltimos7Dias(): Flow<List<ApodEntity>> {
-        val (startDate, _) = FechaUtils.ultimos7Dias()
-        return apodDao.getImagenesUltimos7Dias(startDate)
+        val (startDate, endDate) = FechaUtils.ultimos7Dias()
+        return apodDao.getImagenesUltimos7Dias(startDate, endDate)
     }
 
     val favoritas: Flow<List<ApodEntity>> = apodDao.getImagenesFavoritas()
 
     fun getImagenPorFecha(date: String): Flow<ApodEntity?> =
-        apodDao.getImagenSingleFlow(date)
+        apodDao.getImagenPorFechaFlow(date)
 
     suspend fun toggleFavorite(date: String, currentIsFavorite: Boolean) {
         apodDao.updateFavoriteStatus(date, !currentIsFavorite)
