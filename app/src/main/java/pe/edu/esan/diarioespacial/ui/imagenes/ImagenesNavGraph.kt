@@ -17,7 +17,7 @@ object ImagenesRoutes {
     const val FAVORITOS = "imagenes/favoritos"
     const val DETALLE = "imagenes/detalle/{date}"
 
-    fun detalleRuta(date: String): String = "imagenes/detalle/$date"
+    fun detalleRuta(date: String): String = "imagenes/detalle/${android.net.Uri.encode(date)}"
 }
 
 /** Grafo de navegación de la opción Imágenes (Alumno 1). */
@@ -27,7 +27,7 @@ fun NavGraphBuilder.imagenesGraph(navController: NavHostController) {
             val context = LocalContext.current
             val container = (context.applicationContext as DiarioEspacialApp).container
             val viewModel: ImagenesViewModel = viewModel(
-                factory = ImagenesViewModelFactory(container.apodRepository)
+                factory = ImagenesViewModelFactory(container.apodRepository, sincronizarAlIniciar = true)
             )
 
             ImagenesListaScreen(
