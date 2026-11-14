@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base de la ventana; los colores de la UI los define Compose (ui/theme). -->
+    <style name="Theme.DiarioEspacial" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#FF0B1026</item>
+        <item name="android:navigationBarColor">#FF0B1026</item>
+        <item name="android:windowBackground">#FF0B1026</item>
+    </style>
+</resources>
