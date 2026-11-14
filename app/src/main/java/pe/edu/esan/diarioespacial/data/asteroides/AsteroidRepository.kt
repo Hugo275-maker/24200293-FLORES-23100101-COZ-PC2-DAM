@@ -2,6 +2,7 @@ package pe.edu.esan.diarioespacial.data.asteroides
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import pe.edu.esan.diarioespacial.BuildConfig
 import pe.edu.esan.diarioespacial.data.local.asteroides.AsteroidDao
 import pe.edu.esan.diarioespacial.data.local.asteroides.AsteroidEntity
 import pe.edu.esan.diarioespacial.data.remote.asteroides.NeoApiService
@@ -48,7 +49,9 @@ class AsteroidRepository(
             throw e
         } catch (e: HttpException) {
             val mensaje = when (e.code()) {
-                401, 403 -> "La API rechazó la clave. Revisa NASA_API_KEY en local.properties."
+                401, 403 -> if (BuildConfig.NASA_API_KEY.isBlank())
+                    "Falta la API key: agrega NASA_API_KEY=tu_clave en local.properties y vuelve a ejecutar."
+                else "La API rechazó la clave. Revisa NASA_API_KEY en local.properties."
                 429 -> "Se superó el límite de consultas de la API. Intenta más tarde."
                 else -> "Error del servidor de la NASA (${e.code()})."
             }
